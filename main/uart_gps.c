@@ -36,110 +36,120 @@ void init_gps_uart(void) {
                UART_PIN_NO_CHANGE);
 }
 
+void gps_parse(const char *str)
+{
+	char *start = str;
+	uint8_t run = true;
+	nmea_s *data;
 
+	// Sync
+	while (*start != '$' && *start != '\0')
+	{
+		start++;
+	}
+	if (*start == '\0')
+		return; // Message not found
 
-void foo(const char *str) {
-  char *start = str;
-  uint8_t run = true;
-  nmea_s *data;
+	while (run)
+	{
+		char buf[255];
+		char cpy[255] = {0};
+		int index = 0;
 
-  printf("\n=================================\n");
-  printf("%s", (char *)str);
-  printf("\n=================================\n");
+		while (true)
+		{
+			if (*start == '\n' || *start == '\0')
+			{
+				start++;
+				if (*start == '\0')
+					run = false;
+				break;
+			}
+			if (*start != '\r')
+			{
+				cpy[index++] = *start;
+			}
+			start++;
+		}
 
-  // Sync
-  while (*start != '$' && *start != '\0') {
-      start++;
-  }
-  if (*start == '\0') return; // Message not found
+		cpy[index++] = '\r';
+		cpy[index] = '\n';
 
-  while (run)
-  {
-    char buf[255];
-    char cpy[255] = {0};
-    int index = 0;
+		// Invalid string
+		if (cpy[0] != '$')
+			continue;
 
-    while (true) {
-      if (*start == '\n' || *start == '\0') {
-        start++;
-        if (*start == '\0') run = false;
-        break;
-      }
-      if (*start != '\r') {
-             cpy[index++] = *start;
-      }
-      start++;
-    }
-
-    cpy[index++] = '\r';
-    cpy[index] = '\n';
-
-    // Invalid string
-    if (cpy[0] != '$') continue;
-
-    data = nmea_parse(cpy, index, 0);
-		if (NULL != data) {
-
-      printf("Data type: %d\n", data->type);
-
-			if (0 < data->errors) {
+		data = nmea_parse(cpy, strlen(cpy), 0);
+		if (NULL != data)
+		{
+			if (0 < data->errors)
+			{
 				printf("WARN: The sentence struct contains parse errors!\n");
 			}
 
-			if (NMEA_GPGGA == data->type) {
+			if (NMEA_GPGGA == data->type)
+			{
 				printf("GPGGA sentence\n");
-				nmea_gpgga_s *gpgga = (nmea_gpgga_s *) data;
+				nmea_gpgga_s *gpgga = (nmea_gpgga_s *)data;
 				printf("Number of satellites: %d\n", gpgga->n_satellites);
 				printf("Altitude: %f %c\n", gpgga->altitude, gpgga->altitude_unit);
 			}
 
-			if (NMEA_GPGLL == data->type) {
+			if (NMEA_GPGLL == data->type)
+			{
 				printf("GPGLL sentence\n");
-				nmea_gpgll_s *pos = (nmea_gpgll_s *) data;
+				nmea_gpgll_s *pos = (nmea_gpgll_s *)data;
 				printf("Longitude:\n");
 				printf("  Degrees: %d\n", pos->longitude.degrees);
 				printf("  Minutes: %f\n", pos->longitude.minutes);
-				printf("  Cardinal: %c\n", (char) pos->longitude.cardinal);
+				printf("  Cardinal: %c\n", (char)pos->longitude.cardinal);
 				printf("Latitude:\n");
 				printf("  Degrees: %d\n", pos->latitude.degrees);
 				printf("  Minutes: %f\n", pos->latitude.minutes);
-				printf("  Cardinal: %c\n", (char) pos->latitude.cardinal);
-				strftime(buf, sizeof(buf), "%H:%M:%S", &pos->time);
-				printf("Time: %s\n", buf);
+				printf("  Cardinal: %c\n", (char)pos->latitude.cardinal);
+				if (strftime(buf, sizeof(buf), "%H:%M:%S", &pos->time))
+					printf("Time: %s\n", buf);
 			}
 
-			if (NMEA_GPRMC == data->type) {
+			if (NMEA_GPRMC == data->type)
+			{
 				printf("GPRMC sentence\n");
-				nmea_gprmc_s *pos = (nmea_gprmc_s *) data;
+				nmea_gprmc_s *pos = (nmea_gprmc_s *)data;
 				printf("Longitude:\n");
 				printf("  Degrees: %d\n", pos->longitude.degrees);
 				printf("  Minutes: %f\n", pos->longitude.minutes);
-				printf("  Cardinal: %c\n", (char) pos->longitude.cardinal);
+				printf("  Cardinal: %c\n", (char)pos->longitude.cardinal);
 				printf("Latitude:\n");
 				printf("  Degrees: %d\n", pos->latitude.degrees);
 				printf("  Minutes: %f\n", pos->latitude.minutes);
-				printf("  Cardinal: %c\n", (char) pos->latitude.cardinal);
-				strftime(buf, sizeof(buf), "%d %b %T %Y", &pos->date_time);
-				printf("Date & Time: %s\n", buf);
+				printf("  Cardinal: %c\n", (char)pos->latitude.cardinal);
+				if (strftime(buf, sizeof(buf), "%d %b %T %Y", &pos->date_time))
+					printf("Date & Time: %s\n", buf);
 				printf("Speed, in Knots: %f:\n", pos->gndspd_knots);
 				printf("Track, in degrees: %f\n", pos->track_deg);
 				printf("Magnetic Variation:\n");
 				printf("  Degrees: %f\n", pos->magvar_deg);
-				printf("  Cardinal: %c\n", (char) pos->magvar_cardinal);
+				printf("  Cardinal: %c\n", (char)pos->magvar_cardinal);
 				double adjusted_course = pos->track_deg;
-				if (NMEA_CARDINAL_DIR_EAST == pos->magvar_cardinal) {
+				if (NMEA_CARDINAL_DIR_EAST == pos->magvar_cardinal)
+				{
 					adjusted_course -= pos->magvar_deg;
-				} else if (NMEA_CARDINAL_DIR_WEST == pos->magvar_cardinal) {
+				}
+				else if (NMEA_CARDINAL_DIR_WEST == pos->magvar_cardinal)
+				{
 					adjusted_course += pos->magvar_deg;
-				} else {
+				}
+				else
+				{
 					printf("Invalid Magnetic Variation Direction!!\n");
 				}
 
 				printf("Adjusted Track (heading): %f\n", adjusted_course);
 			}
 
-			if (NMEA_GPGSA == data->type) {
-				nmea_gpgsa_s *gpgsa = (nmea_gpgsa_s *) data;
+			if (NMEA_GPGSA == data->type)
+			{
+				nmea_gpgsa_s *gpgsa = (nmea_gpgsa_s *)data;
 
 				printf("GPGSA Sentence:\n");
 				printf("  Mode: %c\n", gpgsa->mode);
@@ -149,8 +159,9 @@ void foo(const char *str) {
 				printf("  VDOP: %.2lf\n", gpgsa->vdop);
 			}
 
-			if (NMEA_GPGSV == data->type) {
-				nmea_gpgsv_s *gpgsv = (nmea_gpgsv_s *) data;
+			if (NMEA_GPGSV == data->type)
+			{
+				nmea_gpgsv_s *gpgsv = (nmea_gpgsv_s *)data;
 
 				printf("GPGSV Sentence:\n");
 				printf("  Num: %d\n", gpgsv->sentences);
@@ -162,16 +173,18 @@ void foo(const char *str) {
 				printf("  #4:  %d %d %d %d\n", gpgsv->sat[3].prn, gpgsv->sat[3].elevation, gpgsv->sat[3].azimuth, gpgsv->sat[3].snr);
 			}
 
-			if (NMEA_GPTXT == data->type) {
-				nmea_gptxt_s *gptxt = (nmea_gptxt_s *) data;
+			if (NMEA_GPTXT == data->type)
+			{
+				nmea_gptxt_s *gptxt = (nmea_gptxt_s *)data;
 
 				printf("GPTXT Sentence:\n");
 				printf("  ID: %d %d %d\n", gptxt->id_00, gptxt->id_01, gptxt->id_02);
 				printf("  %s\n", gptxt->text);
 			}
 
-			if (NMEA_GPVTG == data->type) {
-				nmea_gpvtg_s *gpvtg = (nmea_gpvtg_s *) data;
+			if (NMEA_GPVTG == data->type)
+			{
+				nmea_gpvtg_s *gpvtg = (nmea_gpvtg_s *)data;
 
 				printf("GPVTG Sentence:\n");
 				printf("  Track [deg]:   %.2lf\n", gpvtg->track_deg);
@@ -180,10 +193,8 @@ void foo(const char *str) {
 			}
 
 			nmea_free(data);
-    } else {
-      printf("GPS data get NULL. String: \n%s\n", cpy);
-    }
-  }
+		}
+	}
 }
 
 void gps_read_task() {
@@ -191,9 +202,7 @@ void gps_read_task() {
   int len = uart_read_bytes(GPS_UART_PORT, data, 255, 20 / portTICK_PERIOD_MS);
   if (len > 0) {
     data[len] = '\0';
-    //printf("Dati GPS ricevuti: %s\n", (char *)data);
-
-    foo((char *)data);
+    gps_parse((char *)data);
   }
   free(data);
 }
