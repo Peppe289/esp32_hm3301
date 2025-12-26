@@ -11,23 +11,12 @@
 #include <sys/unistd.h>
 #include <unistd.h>
 
-void *uart_gps_thread(void *args) {
-
-  for (;;)
-    gps_read_task();
-
-  return NULL;
-}
-
 void app_main(void) {
   uint8_t data_rd[HM3301_BIT_LEN];
   struct hm3301_pm ret;
-  // pthread_t uart_gps;
 
   init_i2c_hm3301();
   init_gps_uart();
-
-  // pthread_create(&uart_gps, NULL, uart_gps_thread, NULL);
 
   vTaskDelay(pdMS_TO_TICKS(5000));
 
