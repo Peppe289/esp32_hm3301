@@ -66,5 +66,6 @@ void connection_listener_start(void) {
    ret = nvs_flash_init();
   }
   ESP_ERROR_CHECK(ret);
-  pthread_join(tconfig, NULL);
+  // Don't wait for ending process
+  // pthread_join(tconfig, NULL);
 }
