@@ -1,3 +1,4 @@
+#include "connection/conn_thread.h"
 #include "esp_system.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -10,7 +11,6 @@
 #include <stdio.h>
 #include <sys/unistd.h>
 #include <unistd.h>
-#include "connection/conn_thread.h"
 
 #include "cJSON.h"
 
@@ -66,27 +66,29 @@ void app_main(void) {
     printf("===============================\n");
     nmea_uart_data_s *nmea_uart_data = gps_read_task();
 
-    printf("NMEA Satelliti: %d\n", nmea_uart_data->n_satellites);
-    printf("Longitude:\n");
-    printf("  Degrees: %d\n", nmea_uart_data->position.longitude.degrees);
-    printf("  Minutes: %f\n", nmea_uart_data->position.longitude.minutes);
-    printf("  Cardinal: %c\n",
-           (char)nmea_uart_data->position.longitude.cardinal);
-    printf("Latitude:\n");
-    printf("  Degrees: %d\n", nmea_uart_data->position.latitude.degrees);
-    printf("  Minutes: %f\n", nmea_uart_data->position.latitude.minutes);
-    printf("  Cardinal: %c\n",
-           (char)nmea_uart_data->position.latitude.cardinal);
+    if (nmea_uart_data) {
+      printf("NMEA Satelliti: %d\n", nmea_uart_data->n_satellites);
+      printf("Longitude:\n");
+      printf("  Degrees: %d\n", nmea_uart_data->position.longitude.degrees);
+      printf("  Minutes: %f\n", nmea_uart_data->position.longitude.minutes);
+      printf("  Cardinal: %c\n",
+             (char)nmea_uart_data->position.longitude.cardinal);
+      printf("Latitude:\n");
+      printf("  Degrees: %d\n", nmea_uart_data->position.latitude.degrees);
+      printf("  Minutes: %f\n", nmea_uart_data->position.latitude.minutes);
+      printf("  Cardinal: %c\n",
+             (char)nmea_uart_data->position.latitude.cardinal);
 
-    char buf[100];
-    if (strftime(buf, sizeof(buf), "%H:%M:%S",
-                 (const struct tm *)&(nmea_uart_data->time))) {
-      printf("Time: %s\n", buf);
+      char buf[100];
+      if (strftime(buf, sizeof(buf), "%H:%M:%S",
+                   (const struct tm *)&(nmea_uart_data->time))) {
+        printf("Time: %s\n", buf);
+      }
+      char *json_string = getString(nmea_uart_data);
+      printf("JSON: %s\n", json_string);
+      free(json_string);
+      free(nmea_uart_data);
+      vTaskDelay(pdMS_TO_TICKS(10000));
     }
-    char *json_string = getString(nmea_uart_data);
-    printf("JSON: %s\n", json_string);
-    free(json_string);
-    free(nmea_uart_data);
-    vTaskDelay(pdMS_TO_TICKS(10000));
   }
 }

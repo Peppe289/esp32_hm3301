@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "gpgga.h"
 #include "gpgll.h"
@@ -167,6 +168,7 @@ last_row:
 nmea_uart_data_s *gps_read_task() {
   uint8_t data[LENGHT_BUFFER];
   nmea_uart_data_s *nmea_uart_data;
+  time_t start = time(NULL);
 
   nmea_uart_data = malloc(sizeof(nmea_uart_data_s));
   if (nmea_uart_data == NULL) {
@@ -191,6 +193,11 @@ nmea_uart_data_s *gps_read_task() {
         return nmea_uart_data;
       } else {
         LOGD("Data Not Valid... Try Again\n");
+        if (difftime(time(NULL), start) > 5) {
+          printf("GPS Time out!\n");
+          free(nmea_uart_data);
+          return NULL;
+        }
       }
     }
   }
