@@ -17,9 +17,10 @@
 
 static char *getString(nmea_uart_data_s *gps_data, struct hm3301_pm *hm3301) {
   cJSON *root = cJSON_CreateObject();
-  cJSON_AddNumberToObject(root, "satellites", gps_data->n_satellites);
 
   if (gps_data) {
+    cJSON_AddNumberToObject(root, "satellites", gps_data->n_satellites);
+
     cJSON *position = cJSON_AddObjectToObject(root, "position");
     cJSON *longitude = cJSON_AddObjectToObject(position, "longitude");
     cJSON *latitude = cJSON_AddObjectToObject(position, "latitude");
