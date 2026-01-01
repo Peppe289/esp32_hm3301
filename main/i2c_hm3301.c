@@ -39,7 +39,7 @@ uint8_t i2c_hm3301_read(uint8_t *raw_data, struct hm3301_pm *hm3301) {
                                     HM3301_BIT_LEN, pdMS_TO_TICKS(100));
   if (err != ESP_OK) {
     printf("I2C Read-Receive fallito con codice: %d", err);
-    return -1;
+    return 1;
   }
 
   for (int i = 0; i < (HM3301_BIT_LEN - 1); i++) {
@@ -48,7 +48,7 @@ uint8_t i2c_hm3301_read(uint8_t *raw_data, struct hm3301_pm *hm3301) {
 
   if (((uint8_t)(sum & 0xFF)) != data_rd[HM3301_BIT_LEN - 1]) {
     printf("Checksum Failed");
-    return -1;
+    return 1;
   }
 
   if (raw_data != NULL) {
@@ -56,7 +56,7 @@ uint8_t i2c_hm3301_read(uint8_t *raw_data, struct hm3301_pm *hm3301) {
   }
 
   if (!hm3301) {
-    return -1;
+    return 1;
   }
 
   hm3301->pm1_0 = HM3301_PM1_0(data_rd);

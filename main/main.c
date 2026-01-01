@@ -67,7 +67,7 @@ void app_main(void) {
 
   for (;;) {
     hm3301 = malloc(sizeof(struct hm3301_pm));
-    if (i2c_hm3301_read(data_rd, hm3301) < 0) {
+    if (i2c_hm3301_read(data_rd, hm3301)) {
       printf("Errore nella lettura\n");
     }
 
