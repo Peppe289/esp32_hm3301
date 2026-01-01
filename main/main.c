@@ -13,6 +13,7 @@
 #include <unistd.h>
 
 #include "cJSON.h"
+#include "connection/mqtt/conn_mqtt_client.h"
 
 static char *getString(nmea_uart_data_s *gps_data, struct hm3301_pm *hm3301) {
   cJSON *root = cJSON_CreateObject();
@@ -102,14 +103,20 @@ void app_main(void) {
                    (const struct tm *)&(nmea_gps->time))) {
         printf("Time: %s\n", buf);
       }
-      char *json_string = getString(nmea_gps, hm3301);
-      printf("JSON: %s\n", json_string);
-      free(json_string);
       free(nmea_gps);
       nmea_gps = NULL;
-      free(hm3301);
-      hm3301 = NULL;
       vTaskDelay(pdMS_TO_TICKS(10000));
     }
+
+    char *json_string = getString(nmea_gps, hm3301);
+
+    if (hm3301) {
+      free(hm3301);
+      hm3301 = NULL;
+    }
+
+    printf("JSON: %s\n", json_string);
+    publish((const char *)json_string);
+    free(json_string);
   }
 }

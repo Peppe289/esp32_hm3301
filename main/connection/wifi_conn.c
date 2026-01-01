@@ -16,8 +16,10 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "wifi_conn.h"
 #include "ble_gatts.h"
+#include "wifi_conn.h"
+
+#include "mqtt/conn_mqtt_client.h"
 
 #define ESP_MAXIMUM_RETRY 2
 
@@ -65,6 +67,9 @@ static void event_handler(void *arg, esp_event_base_t event_base,
     ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
     ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
     s_retry_num = 0;
+
+    mqtt_app_start();
+
     isConnecting = true;
     xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
   }
