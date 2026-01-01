@@ -42,10 +42,12 @@ static char *getString(nmea_uart_data_s *gps_data, struct hm3301_pm *hm3301) {
     cJSON_AddNumberToObject(time, "seconds", gps_data->time.tm_sec);
   }
 
-  cJSON *pm = cJSON_AddObjectToObject(root, "hm3301");
-  cJSON_AddNumberToObject(pm, "PM1.0", hm3301->pm1_0);
-  cJSON_AddNumberToObject(pm, "PM2.5", hm3301->pm2_5);
-  cJSON_AddNumberToObject(pm, "PM10", hm3301->pm10);
+  if (hm3301) {
+    cJSON *pm = cJSON_AddObjectToObject(root, "hm3301");
+    cJSON_AddNumberToObject(pm, "PM1.0", hm3301->pm1_0);
+    cJSON_AddNumberToObject(pm, "PM2.5", hm3301->pm2_5);
+    cJSON_AddNumberToObject(pm, "PM10", hm3301->pm10);
+  }
 
   char *string = cJSON_PrintUnformatted(root);
   cJSON_Delete(root);
@@ -64,6 +66,7 @@ void app_main(void) {
   vTaskDelay(pdMS_TO_TICKS(1000));
 
   for (;;) {
+    hm3301 = malloc(sizeof(struct hm3301_pm));
     if (i2c_hm3301_read(data_rd, hm3301) < 0) {
       printf("Errore nella lettura\n");
     }
@@ -104,6 +107,8 @@ void app_main(void) {
       free(json_string);
       free(nmea_gps);
       nmea_gps = NULL;
+      free(hm3301);
+      hm3301 = NULL;
       vTaskDelay(pdMS_TO_TICKS(10000));
     }
   }
