@@ -28,6 +28,7 @@ static const char *TAG = "mqtts_example";
 #error "Missing MQTT_PASSWORD env variable. Using default."
 #endif
 
+static esp_mqtt_client_handle_t client = NULL;
 static const esp_mqtt_client_config_t mqtt_cfg = {
     .broker =
         {
@@ -66,11 +67,10 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
            "Event dispatched from event loop base=%s, event_id=%" PRIi32 "",
            base, event_id);
   esp_mqtt_event_handle_t event = event_data;
-  esp_mqtt_client_handle_t client = event->client;
   switch ((esp_mqtt_event_id_t)event_id) {
   case MQTT_EVENT_CONNECTED:
     ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
-    esp_mqtt_client_subscribe(client, "/topic/qos0", 0);
+    esp_mqtt_client_subscribe(event->client, "/topic/qos0", 0);
     break;
   case MQTT_EVENT_DISCONNECTED:
     ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
@@ -90,10 +90,9 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
   }
 }
 
-static esp_mqtt_client_handle_t client;
-
 void publish(const char *data) {
-  esp_mqtt_client_publish(client, "/topic/qos0", data, 0, 0, 0);
+  if (client)
+    esp_mqtt_client_publish(client, "/topic/qos0", data, 0, 0, 0);
 }
 
 void mqtt_app_start(void) {
