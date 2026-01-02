@@ -104,9 +104,6 @@ void app_main(void) {
                    (const struct tm *)&(nmea_gps->time))) {
         printf("Time: %s\n", buf);
       }
-      free(nmea_gps);
-      nmea_gps = NULL;
-      vTaskDelay(pdMS_TO_TICKS(10000));
     }
 
     char *json_string = getString(nmea_gps, hm3301);
@@ -116,8 +113,15 @@ void app_main(void) {
       hm3301 = NULL;
     }
 
+    if (nmea_gps) {
+      free(nmea_gps);
+      nmea_gps = NULL;
+    }
+
     printf("JSON: %s\n", json_string);
     publish((const char *)json_string);
     free(json_string);
+
+    vTaskDelay(pdMS_TO_TICKS(10000));
   }
 }
