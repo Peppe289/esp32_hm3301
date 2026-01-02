@@ -117,11 +117,6 @@ set(ENV{MQTT_USERNAME} "username")
 set(ENV{MQTT_PASSWORD} "passwd")
 ```
 
-# Plane to do:
-
-- [ ] MQTT server for push data.
-- [ ] LittleFS: save data when offline.
-
 <!-- ### Notes
 
 build command (build with Make): `idf.py -G "Unix Makefiles" build` -->
