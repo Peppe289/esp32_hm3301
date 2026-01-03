@@ -12,6 +12,15 @@
 #include "wifi_conn.h"
 
 void *manageConnection(void *args) {
+
+#ifdef WIFI_SSID
+  memcpy(ssid, WIFI_SSID, sizeof(WIFI_SSID));
+#endif
+
+#ifdef WIFI_PASSWD
+  memcpy(password, WIFI_PASSWD, sizeof(WIFI_PASSWD));
+#endif
+
   for (;;) {
     vTaskDelay(3000 / portTICK_PERIOD_MS);
 
