@@ -11,19 +11,23 @@
 #include "esp_log.h"
 
 #ifndef MQTT_BROKER
-#error "Missing MQTT_BROKER env variable. Using default."
+#warning "Missing MQTT_BROKER env variable. Using default."
+#define MQTT_BROKER "0.0.0.0"
 #endif
 
 #ifndef MQTT_PORT
 #warning "Missing MQTT_BROKER env variable. Using default."
+#define MQTT_PORT 8883
 #endif
 
 #ifndef MQTT_USERNAME
-#error "Missing MQTT_USERNAME env variable. Using default."
+#warning "Missing MQTT_USERNAME env variable. Using default."
+#define MQTT_USERNAME "guest"
 #endif
 
 #ifndef MQTT_PASSWORD
-#error "Missing MQTT_PASSWORD env variable. Using default."
+#warning "Missing MQTT_PASSWORD env variable. Using default."
+#define MQTT_PASSWORD "1234"
 #endif
 
 static esp_mqtt_client_handle_t client = NULL;
