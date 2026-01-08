@@ -20,14 +20,21 @@ static const char *TAG = "MAIN";
 #include "connection/mqtt/conn_mqtt_client.h"
 
 static char *getString(nmea_uart_data_s *gps_data, struct hm3301_pm *hm3301) {
-  cJSON *root = cJSON_CreateObject();
+  cJSON *root;
+  cJSON *pm, *position, *longitude, *latitude, *time;
+  char *string;
+
+  if (gps_data || hm3301)
+    root = cJSON_CreateObject();
+  else
+    return NULL;
 
   if (gps_data) {
     cJSON_AddNumberToObject(root, "satellites", gps_data->n_satellites);
 
-    cJSON *position = cJSON_AddObjectToObject(root, "position");
-    cJSON *longitude = cJSON_AddObjectToObject(position, "longitude");
-    cJSON *latitude = cJSON_AddObjectToObject(position, "latitude");
+    position = cJSON_AddObjectToObject(root, "position");
+    longitude = cJSON_AddObjectToObject(position, "longitude");
+    latitude = cJSON_AddObjectToObject(position, "latitude");
     cJSON_AddNumberToObject(longitude, "degrees",
                             gps_data->position.longitude.degrees);
     cJSON_AddNumberToObject(longitude, "minutes",
@@ -42,20 +49,20 @@ static char *getString(nmea_uart_data_s *gps_data, struct hm3301_pm *hm3301) {
     cJSON_AddStringToObject(
         latitude, "cardinal",
         (char[]){gps_data->position.latitude.cardinal, '\0'});
-    cJSON *time = cJSON_AddObjectToObject(root, "time");
+    time = cJSON_AddObjectToObject(root, "time");
     cJSON_AddNumberToObject(time, "hours", gps_data->time.tm_hour);
     cJSON_AddNumberToObject(time, "minutes", gps_data->time.tm_min);
     cJSON_AddNumberToObject(time, "seconds", gps_data->time.tm_sec);
   }
 
   if (hm3301) {
-    cJSON *pm = cJSON_AddObjectToObject(root, "hm3301");
+    pm = cJSON_AddObjectToObject(root, "hm3301");
     cJSON_AddNumberToObject(pm, "PM1.0", hm3301->pm1_0);
     cJSON_AddNumberToObject(pm, "PM2.5", hm3301->pm2_5);
     cJSON_AddNumberToObject(pm, "PM10", hm3301->pm10);
   }
 
-  char *string = cJSON_PrintUnformatted(root);
+  string = cJSON_PrintUnformatted(root);
   cJSON_Delete(root);
   return string;
 }
@@ -99,10 +106,12 @@ void app_main(void) {
       nmea_gps = NULL;
     }
 
-    ESP_LOGI(TAG, "JSON\n: %s\n", json_string);
-    publish((const char *)json_string);
-    free(json_string);
-    json_string = NULL;
+    if (json_string) {
+      ESP_LOGI(TAG, "JSON\n: %s\n", json_string);
+      publish((const char *)json_string);
+      free(json_string);
+      json_string = NULL;
+    }
 
     vTaskDelay(pdMS_TO_TICKS(10000));
   }
