@@ -65,7 +65,7 @@ void disableWIFI() {
   esp_wifi_deinit();
 }
 
-void wifi_init_sta(char *ssid, char *passwd) {
+void wifi_init_sta(char *_ssid, char *passwd) {
   s_wifi_event_group = xEventGroupCreate();
 
   ESP_ERROR_CHECK(esp_netif_init());
@@ -93,7 +93,7 @@ void wifi_init_sta(char *ssid, char *passwd) {
           },
   };
 
-  strncpy((char *)wifi_config.sta.ssid, ssid, sizeof(wifi_config.sta.ssid) - 1);
+  strncpy((char *)wifi_config.sta.ssid, _ssid, sizeof(wifi_config.sta.ssid) - 1);
   wifi_config.sta.ssid[sizeof(wifi_config.sta.ssid) - 1] = '\0';
   strncpy((char *)wifi_config.sta.password, passwd,
           sizeof(wifi_config.sta.password) - 1);
